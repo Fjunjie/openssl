@@ -141,6 +141,7 @@ int MAIN(int argc, char **argv)
 {
     int i, ret = 0;
     int cflags = 0, version = 0, date = 0, options = 0, platform = 0, dir = 0;
+    int number = 0;
 
     apps_startup();
 
@@ -163,10 +164,18 @@ int MAIN(int argc, char **argv)
             platform = 1;
         else if (strcmp(argv[i], "-d") == 0)
             dir = 1;
+        else if (strcmp(argv[i], "-n") == 0)
+            number = 1;
         else if (strcmp(argv[i], "-a") == 0)
             date = version = cflags = options = platform = dir = 1;
+        else if (strcmp(argv[i], "-h") == 0 ||
+                 strcmp(argv[i], "--help") == 0) {
+            printf("usage: version [-a] [-v] [-b] [-f] [-o] [-p] [-d] [-n]\n");
+            printf("  -n  print the numeric library version in hexadecimal\n");
+            goto end;
+        }
         else {
-            BIO_printf(bio_err, "usage:version -[avbofpd]\n");
+            BIO_printf(bio_err, "usage: version -[avbofpdn]\n");
             ret = 1;
             goto end;
         }
@@ -208,6 +217,8 @@ int MAIN(int argc, char **argv)
         printf("%s\n", SSLeay_version(SSLEAY_CFLAGS));
     if (dir)
         printf("%s\n", SSLeay_version(SSLEAY_DIR));
+    if (number)
+        printf("0x%08lx\n", SSLeay());
  end:
     apps_shutdown();
     OPENSSL_EXIT(ret);
