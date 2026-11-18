@@ -45,7 +45,7 @@ only include SSL v2 ciphers.
 
 only include TLS v1 ciphers.
 
-=item B<-h>, B<-?>
+=item B<-h>, B<--help>, B<-?>
 
 print a brief usage message.
 

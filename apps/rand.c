@@ -56,7 +56,10 @@
 #include "apps.h"
 
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <openssl/bio.h>
@@ -85,6 +88,8 @@ int MAIN(int argc, char **argv)
     int base64 = 0;
     int hex = 0;
     BIO *out = NULL;
+    BIO *file_out = NULL;
+    FILE *output_file = NULL;
     int num = -1;
 #ifndef OPENSSL_NO_ENGINE
     char *engine = NULL;
@@ -95,6 +100,15 @@ int MAIN(int argc, char **argv)
     if (bio_err == NULL)
         if ((bio_err = BIO_new(BIO_s_file())) != NULL)
             BIO_set_fp(bio_err, stderr, BIO_NOCLOSE | BIO_FP_TEXT);
+
+    if (argc == 2 && (strcmp(argv[1], "-h") == 0 ||
+                      strcmp(argv[1], "--help") == 0)) {
+        printf("Usage: rand [options] num\n");
+        printf("Generate num random bytes; options include -out, -rand, "
+               "-base64, and -hex.\n");
+        ret = 0;
+        goto err;
+    }
 
     if (!load_config(bio_err, NULL))
         goto err;
@@ -133,9 +147,16 @@ int MAIN(int argc, char **argv)
                 badopt = 1;
         } else if (isdigit((unsigned char)argv[i][0])) {
             if (num < 0) {
-                r = sscanf(argv[i], "%d", &num);
-                if (r == 0 || num < 0)
+                char *end;
+                long value;
+
+                errno = 0;
+                value = strtol(argv[i], &end, 10);
+                if (errno == ERANGE || *end != '\0' ||
+                    value < 0 || value > INT_MAX)
                     badopt = 1;
+                else
+                    num = (int)value;
             } else
                 badopt = 1;
         } else
@@ -174,6 +195,7 @@ int MAIN(int argc, char **argv)
     out = BIO_new(BIO_s_file());
     if (out == NULL)
         goto err;
+    file_out = out;
     if (outfile != NULL)
         r = BIO_write_filename(out, outfile);
     else {
@@ -205,17 +227,25 @@ int MAIN(int argc, char **argv)
         r = RAND_bytes(buf, chunk);
         if (r <= 0)
             goto err;
-        if (!hex)
-            BIO_write(out, buf, chunk);
-        else {
+        if (!hex) {
+            if (BIO_write(out, buf, chunk) != chunk)
+                goto err;
+        } else {
             for (i = 0; i < chunk; i++)
-                BIO_printf(out, "%02x", buf[i]);
+                if (BIO_printf(out, "%02x", buf[i]) != 2)
+                    goto err;
         }
         num -= chunk;
     }
-    if (hex)
-        BIO_puts(out, "\n");
-    (void)BIO_flush(out);
+    if (hex && BIO_puts(out, "\n") <= 0)
+        goto err;
+    if (BIO_flush(out) <= 0)
+        goto err;
+    if (outfile != NULL) {
+        BIO_get_fp(file_out, &output_file);
+        if (output_file == NULL || ferror(output_file))
+            goto err;
+    }
 
     app_RAND_write_file(NULL, bio_err);
     ret = 0;

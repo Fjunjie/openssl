@@ -13,6 +13,8 @@ B<openssl rand>
 [B<-hex>]
 I<num>
 
+B<openssl rand> B<-h>
+
 =head1 DESCRIPTION
 
 The B<rand> command outputs I<num> pseudo-random bytes after seeding
@@ -46,7 +48,15 @@ Perform base64 encoding on the output.
 
 Show the output as a hex string.
 
+=item B<-h>, B<--help>
+
+Print a short usage summary.
+
 =back
+
+The byte count must be a complete nonnegative decimal integer that fits in
+the platform's C integer range. An invalid count or a write failure causes
+the command to exit unsuccessfully.
 
 =head1 SEE ALSO
 
