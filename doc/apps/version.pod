@@ -13,6 +13,9 @@ B<openssl version>
 [B<-o>]
 [B<-f>]
 [B<-p>]
+[B<-d>]
+[B<-n>]
+[B<-h>]
 
 =head1 DESCRIPTION
 
@@ -24,7 +27,7 @@ This command is used to print out version information about OpenSSL.
 
 =item B<-a>
 
-all information, this is the same as setting all the other flags.
+all standard textual information.
 
 =item B<-v>
 
@@ -38,7 +41,7 @@ the date the current version of OpenSSL was built.
 
 option information: various options set when the library was built.
 
-=item B<-c>
+=item B<-f>
 
 compilation flags.
 
@@ -49,6 +52,14 @@ platform setting.
 =item B<-d>
 
 OPENSSLDIR setting.
+
+=item B<-n>
+
+the numeric library version in hexadecimal.
+
+=item B<-h>, B<--help>
+
+print a short usage summary.
 
 =back
 

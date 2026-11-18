@@ -59,6 +59,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "apps.h"
 #include <openssl/bio.h>
 #include <openssl/lhash.h>
@@ -69,6 +70,18 @@
 #define PROG    errstr_main
 
 int MAIN(int, char **);
+
+static int parse_error_code(const char *text, unsigned long *code)
+{
+    char *end;
+
+    if (text[0] == '\0' || text[0] == '-' || text[0] == '+' ||
+        text[0] == ' ' || text[0] == '\t')
+        return 0;
+    errno = 0;
+    *code = strtoul(text, &end, 16);
+    return end != text && *end == '\0' && errno != ERANGE;
+}
 
 int MAIN(int argc, char **argv)
 {
@@ -83,6 +96,12 @@ int MAIN(int argc, char **argv)
             BIO_set_fp(bio_err, stderr, BIO_NOCLOSE | BIO_FP_TEXT);
 
     SSL_load_error_strings();
+
+    if (argc == 2 && (strcmp(argv[1], "-h") == 0 ||
+                      strcmp(argv[1], "--help") == 0)) {
+        printf("usage: errstr [-stats] <hex-error-code> ...\n");
+        goto end;
+    }
 
     if ((argc > 1) && (strcmp(argv[1], "-stats") == 0)) {
         BIO *out = NULL;
@@ -107,15 +126,16 @@ int MAIN(int argc, char **argv)
     }
 
     for (i = 1; i < argc; i++) {
-        if (sscanf(argv[i], "%lx", &l)) {
+        if (parse_error_code(argv[i], &l)) {
             ERR_error_string_n(l, buf, sizeof buf);
             printf("%s\n", buf);
         } else {
             printf("%s: bad error code\n", argv[i]);
-            printf("usage: errstr [-stats] <errno> ...\n");
+            printf("usage: errstr [-stats] <hex-error-code> ...\n");
             ret++;
         }
     }
+ end:
     apps_shutdown();
     OPENSSL_EXIT(ret);
 }

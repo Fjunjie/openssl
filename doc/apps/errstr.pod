@@ -6,7 +6,9 @@ errstr - lookup error codes
 
 =head1 SYNOPSIS
 
-B<openssl errstr error_code>
+B<openssl errstr> [B<-stats>] I<hex_error_code> ...
+
+B<openssl errstr> B<-h>
 
 =head1 DESCRIPTION
 
@@ -14,6 +16,23 @@ Sometimes an application will not load error message and only
 numerical forms will be available. The B<errstr> utility can be used to 
 display the meaning of the hex code. The hex code is the hex digits after the
 second colon.
+
+Each argument must contain a complete hexadecimal error code. A value with
+an invalid suffix or an out-of-range value is rejected.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-stats>
+
+print error string table statistics before decoding any error codes.
+
+=item B<-h>, B<--help>
+
+print a short usage summary.
+
+=back
 
 =head1 EXAMPLE
 
