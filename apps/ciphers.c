@@ -86,7 +86,6 @@ int MAIN(int argc, char **argv)
     int verbose = 0;
     const char **pp;
     const char *p;
-    int badops = 0;
     SSL_CTX *ctx = NULL;
     SSL *ssl = NULL;
     char *ciphers = NULL;
@@ -132,20 +131,18 @@ int MAIN(int argc, char **argv)
         else if (strcmp(*argv, "-tls1") == 0)
             meth = TLSv1_client_method();
 #endif
-        else if ((strncmp(*argv, "-h", 2) == 0) || (strcmp(*argv, "-?") == 0)) {
-            badops = 1;
-            break;
+        else if (strcmp(*argv, "-h") == 0 ||
+                 strcmp(*argv, "--help") == 0 ||
+                 strcmp(*argv, "-?") == 0) {
+            for (pp = ciphers_usage; (*pp != NULL); pp++)
+                BIO_printf(STDout, "%s", *pp);
+            ret = 0;
+            goto end;
         } else {
             ciphers = *argv;
         }
         argc--;
         argv++;
-    }
-
-    if (badops) {
-        for (pp = ciphers_usage; (*pp != NULL); pp++)
-            BIO_printf(bio_err, "%s", *pp);
-        goto end;
     }
 
     OpenSSL_add_ssl_algorithms();
